@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { MapPin, Clock, Globe, MessageCircle, ArrowUpCircle, ChevronRight } from 'lucide-react';
 
 // 賓士貓 1：探頭貓 (放在圖片上方)
@@ -47,32 +47,6 @@ const SleepingTuxedoCat = ({ className }) => (
 );
 
 export default function App() {
-  // SEO 及 Meta Tags 動態注入 (適合單頁應用或沒有直接存取 HTML head 的部署環境)
-  useEffect(() => {
-    const metaTags = [
-      { name: 'description', content: '2015 Suzuki Carry 小貨車。實用載貨・尾門升降更省力。配備尾門升降，裝卸貨物更輕鬆。歡迎現場賞車，位於台南市歸仁區。' },
-      { name: 'theme-color', content: '#f8fafc' },
-      { property: 'og:title', content: '2015 Suzuki Carry 小貨車 | 佳馬汽車' },
-      { property: 'og:description', content: '實用載貨・尾門升降更省力。配備尾門升降，裝卸貨物更輕鬆。歡迎現場賞車！' },
-      { property: 'og:image', content: 'https://suzuki-carry.ai.jiama.com.tw/suzuki-carry.jpg' },
-      { property: 'og:url', content: 'https://suzuki-carry.ai.jiama.com.tw/' },
-      { property: 'og:type', content: 'website' }
-    ];
-
-    document.title = '2015 Suzuki Carry 小貨車 | 佳馬汽車';
-
-    metaTags.forEach(({ name, property, content }) => {
-      let tag = document.querySelector(`meta[${name ? `name="${name}"` : `property="${property}"`}]`);
-      if (!tag) {
-        tag = document.createElement('meta');
-        if (name) tag.setAttribute('name', name);
-        if (property) tag.setAttribute('property', property);
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute('content', content);
-    });
-  }, []);
-
   return (
     <div className="min-h-screen bg-slate-100 flex justify-center text-slate-800 font-sans">
       {/* 核心容器：限制最大寬度，強迫桌機也顯示完美的手機比例 */}
