@@ -1,5 +1,9 @@
-import React from 'react';
-import { MapPin, Clock, Globe, MessageCircle, ArrowUpCircle, ChevronRight } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { MapPin, Clock, Globe, MessageCircle, ArrowUpCircle, ChevronRight, Truck, Shield, Wrench, Star } from 'lucide-react';
+
+/* ═══════════════════════════════════════════════
+   賓士貓 SVGs
+   ═══════════════════════════════════════════════ */
 
 // 賓士貓 1：探頭貓 (放在圖片上方)
 const PeekingTuxedoCat = ({ className }) => (
@@ -43,143 +47,363 @@ const SleepingTuxedoCat = ({ className }) => (
     {/* 白襪子 */}
     <rect x="36" y="30" width="6" height="6" rx="3" fill="#F8FAFC" />
     <rect x="56" y="30" width="6" height="6" rx="3" fill="#F8FAFC" />
+    {/* Zzz 睡覺符號 */}
+    <text x="38" y="10" fill="rgba(255,255,255,0.3)" fontSize="7" fontWeight="bold" fontFamily="Inter, sans-serif">Z</text>
+    <text x="44" y="6" fill="rgba(255,255,255,0.2)" fontSize="5" fontWeight="bold" fontFamily="Inter, sans-serif">z</text>
+    <text x="48" y="3" fill="rgba(255,255,255,0.15)" fontSize="4" fontWeight="bold" fontFamily="Inter, sans-serif">z</text>
   </svg>
 );
 
-export default function App() {
+/* ═══════════════════════════════════════════════
+   Scroll Reveal Hook
+   ═══════════════════════════════════════════════ */
+function useReveal() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      },
+      { threshold: 0.15 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+  return ref;
+}
+
+/* ═══════════════════════════════════════════════
+   Particle Background Component
+   ═══════════════════════════════════════════════ */
+const ParticleField = () => {
+  const particles = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: Math.random() * 2 + 1,
+    delay: Math.random() * 5,
+    duration: Math.random() * 8 + 8,
+  }));
+
   return (
-    <div className="min-h-screen bg-slate-100 flex justify-center text-slate-800 font-sans">
-      {/* 核心容器：限制最大寬度，強迫桌機也顯示完美的手機比例 */}
-      <main className="w-full max-w-md bg-slate-50 shadow-xl relative overflow-hidden flex flex-col">
-        
-        {/* 頂部 Header */}
-        <header className="px-6 py-8 text-center bg-white relative z-10">
-          <h1 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
-            2015 Suzuki Carry 小貨車
-          </h1>
-          <p className="text-slate-600 font-medium">
-            實用載貨・尾門升降更省力
-          </p>
-        </header>
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 1 }}>
+      {particles.map(p => (
+        <div
+          key={p.id}
+          className="absolute rounded-full"
+          style={{
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            background: 'rgba(255, 255, 255, 0.15)',
+            animation: `particle-float ${p.duration}s ease-in-out ${p.delay}s infinite`,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
-        {/* 圖片區域 (與貓咪結合) */}
-        <div className="relative w-full aspect-square bg-slate-200">
-          {/* 探頭的賓士貓 */}
-          <div className="absolute -top-1 left-6 z-20 w-14 h-14 drop-shadow-md">
-            <PeekingTuxedoCat className="w-full h-full" />
-          </div>
-          
-          <img 
-            src="/suzuki-carry.jpg" 
-            alt="2015 Suzuki Carry 小貨車" 
-            className="w-full h-full object-cover relative z-10"
-            onError={(e) => {
-              // 圖片失效時的優雅降級
-              e.target.style.display = 'none';
-              e.target.parentElement.classList.add('flex', 'items-center', 'justify-center', 'bg-slate-200');
-              e.target.parentElement.innerHTML += '<span class="text-slate-400">圖片載入中或未找到...</span>';
-            }}
-          />
+/* ═══════════════════════════════════════════════
+   Feature Badge Component
+   ═══════════════════════════════════════════════ */
+const FeatureBadge = ({ icon: Icon, text, variant = 'brand' }) => (
+  <span className={`badge ${variant === 'brand' ? 'badge-brand' : 'badge-accent'}`}>
+    <Icon size={13} strokeWidth={2.5} />
+    {text}
+  </span>
+);
+
+/* ═══════════════════════════════════════════════
+   Feature Card Component
+   ═══════════════════════════════════════════════ */
+const FeatureCard = ({ icon: Icon, title, description, iconBg, delay = 0 }) => {
+  const ref = useReveal();
+  return (
+    <div ref={ref} className={`feature-card reveal reveal-delay-${delay}`}>
+      <div className="flex items-start gap-4">
+        <div
+          className="flex items-center justify-center w-12 h-12 rounded-2xl flex-shrink-0"
+          style={{ background: iconBg }}
+        >
+          <Icon size={22} strokeWidth={1.8} className="text-white" />
         </div>
+        <div className="min-w-0">
+          <h3 className="text-white font-semibold text-base mb-1">{title}</h3>
+          <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
+            {description}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-        {/* 重點配備區塊 */}
-        <div className="px-6 py-8 bg-white mt-1 border-t border-slate-100">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="bg-blue-50 p-3 rounded-2xl text-blue-600 shrink-0">
-              <ArrowUpCircle size={28} strokeWidth={1.5} />
+/* ═══════════════════════════════════════════════
+   Main App
+   ═══════════════════════════════════════════════ */
+export default function App() {
+  const heroRef = useReveal();
+  const ctaRef = useReveal();
+  const infoRef = useReveal();
+  const footerRef = useReveal();
+
+  // Counter animation for year
+  const [isLoaded, setIsLoaded] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoaded(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <>
+      {/* Animated Mesh Background */}
+      <div className="bg-mesh" />
+      {/* Noise Texture Overlay */}
+      <div className="noise-overlay" />
+
+      <div className="min-h-screen flex justify-center relative" style={{ zIndex: 1 }}>
+        {/* 核心容器 */}
+        <main className="w-full max-w-md relative flex flex-col">
+
+          {/* ── Hero Section ── */}
+          <section className="px-5 pt-8 pb-2">
+            {/* Top brand strip */}
+            <div
+              className={`flex items-center justify-between mb-6 transition-all duration-700 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+                }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, #3380ff, #1b5ff5)' }}>
+                  <span className="text-white text-xs font-bold tracking-tight">佳馬</span>
+                </div>
+                <span className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  佳馬汽車
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#06C755' }} />
+                <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  營業中
+                </span>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-slate-800 mb-1">重點配備</h3>
-              <p className="text-slate-600 leading-relaxed">
+
+            {/* Hero Image */}
+            <div
+              ref={heroRef}
+              className={`hero-image-wrapper reveal relative ${isLoaded ? 'visible' : ''}`}
+            >
+              {/* Peeking Cat */}
+              <div className="absolute -top-1 left-5 w-14 h-14 drop-shadow-lg cat-peek"
+                style={{ zIndex: 20 }}>
+                <PeekingTuxedoCat className="w-full h-full" />
+              </div>
+
+              {/* Badges overlay */}
+              <div className="absolute top-4 right-4 flex flex-col gap-2" style={{ zIndex: 10 }}>
+                <FeatureBadge icon={Truck} text="2015年式" variant="brand" />
+                <FeatureBadge icon={Star} text="優質好車" variant="accent" />
+              </div>
+
+              {/* Image */}
+              <img
+                src="/suzuki-carry.jpg"
+                alt="2015 Suzuki Carry 小貨車"
+                className="w-full aspect-[4/3] object-cover relative"
+                style={{ zIndex: 1 }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML +=
+                    '<div class="w-full aspect-[4/3] flex items-center justify-center" style="background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3)">圖片載入中...</div>';
+                }}
+              />
+
+              {/* Bottom overlay text */}
+              <div className="absolute bottom-0 left-0 right-0 px-5 pb-5" style={{ zIndex: 3 }}>
+                <h1 className="text-2xl font-bold text-white mb-1 tracking-tight"
+                  style={{ textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>
+                  Suzuki Carry
+                </h1>
+                <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  2015 小貨車 ・ 實用載貨首選
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* ── Tagline ── */}
+          <section className="px-5 py-6">
+            <div className="text-center">
+              <p className="text-xl font-bold text-gradient tracking-tight leading-snug">
+                實用載貨・尾門升降更省力
+              </p>
+              <p className="text-sm mt-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
                 配備尾門升降，裝卸貨物更輕鬆
               </p>
             </div>
-          </div>
-          
-          <div className="text-center mt-8">
-            <p className="text-lg font-bold text-slate-700 tracking-wide">
-              — 歡迎現場賞車 —
+            <div className="divider-glow mt-6" style={{ width: '60%' }} />
+          </section>
+
+          {/* ── Feature Cards ── */}
+          <section className="px-5 pb-6 space-y-3">
+            <FeatureCard
+              icon={ArrowUpCircle}
+              title="尾門升降機"
+              description="搭載尾門升降設備，重物裝卸不費力，省時省力"
+              iconBg="linear-gradient(135deg, #3380ff, #1b5ff5)"
+              delay={1}
+            />
+            <FeatureCard
+              icon={Truck}
+              title="載貨實力派"
+              description="寬敞車斗空間，小型貨物運輸的最佳夥伴"
+              iconBg="linear-gradient(135deg, #f97316, #ea580c)"
+              delay={2}
+            />
+            <FeatureCard
+              icon={Shield}
+              title="佳馬品質保證"
+              description="完整車況檢查，透明交易，安心購車無煩惱"
+              iconBg="linear-gradient(135deg, #10b981, #059669)"
+              delay={3}
+            />
+          </section>
+
+          {/* ── CTA Section ── */}
+          <section ref={ctaRef} className="px-5 pb-6 reveal space-y-3">
+            {/* "歡迎現場賞車" Highlight */}
+            <div className="glass-card-bright shimmer text-center py-5 px-4 mb-2">
+              <ParticleField />
+              <p className="text-lg font-bold text-gradient-brand relative" style={{ zIndex: 2 }}>
+                ✦ 歡迎現場賞車 ✦
+              </p>
+              <p className="text-xs mt-1.5 relative" style={{ color: 'rgba(255,255,255,0.35)', zIndex: 2 }}>
+                台南歸仁 ・ 假日照常營業
+              </p>
+            </div>
+
+            {/* LINE CTA */}
+            <a
+              href="https://lin.ee/XtPcoZP"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cta-button cta-line pulse-glow-green"
+              id="cta-line"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="flex items-center justify-center w-11 h-11 rounded-2xl"
+                  style={{ background: 'rgba(255,255,255,0.2)' }}>
+                  <MessageCircle size={22} className="text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="text-white font-bold text-base leading-tight">加官方 LINE 洽詢</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>ID：@jiamacar</p>
+                </div>
+              </div>
+              <ChevronRight
+                className="text-white opacity-70 transition-transform group-hover:translate-x-1"
+                size={22}
+              />
+            </a>
+
+            {/* Website CTA */}
+            <a
+              href="https://jiama.com.tw/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cta-button cta-website"
+              id="cta-website"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="info-icon"
+                  style={{ background: 'rgba(255,255,255,0.08)' }}>
+                  <Globe size={20} style={{ color: 'rgba(255,255,255,0.6)' }} />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-base leading-tight" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                    佳馬汽車官網
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    查看更多優質好車
+                  </p>
+                </div>
+              </div>
+              <ChevronRight
+                size={20}
+                style={{ color: 'rgba(255,255,255,0.3)' }}
+                className="transition-transform"
+              />
+            </a>
+          </section>
+
+          {/* ── Store Info ── */}
+          <section ref={infoRef} className="px-5 pb-6 reveal">
+            <div className="glass-card p-5">
+              <h2 className="text-sm font-semibold mb-4 tracking-wider uppercase"
+                style={{ color: 'rgba(255,255,255,0.35)', letterSpacing: '0.12em' }}>
+                店面資訊
+              </h2>
+
+              <div className="space-y-1">
+                <div className="info-row">
+                  <div className="info-icon" style={{ background: 'rgba(51, 128, 255, 0.12)' }}>
+                    <MapPin size={18} style={{ color: '#5b9cff' }} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white/80">賞車地點</p>
+                    <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                      台南市歸仁區中山路三段550號
+                    </p>
+                  </div>
+                </div>
+
+                <div className="info-row">
+                  <div className="info-icon" style={{ background: 'rgba(249, 115, 22, 0.12)' }}>
+                    <Clock size={18} style={{ color: '#fb923c' }} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white/80">營業時間</p>
+                    <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                      08:00 – 19:00
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                      (假日照常營業)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ── Footer ── */}
+          <footer
+            ref={footerRef}
+            className="relative px-5 pt-6 pb-8 text-center reveal"
+          >
+            {/* Sleeping Cat */}
+            <div className="flex justify-center mb-4">
+              <div className="w-20 h-10 cat-sleep opacity-70">
+                <SleepingTuxedoCat className="w-full h-full" />
+              </div>
+            </div>
+
+            <div className="divider-glow mb-4" style={{ width: '40%' }} />
+
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>
+              &copy; {new Date().getFullYear()} 佳馬汽車 版權所有
             </p>
-          </div>
-        </div>
+            <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.12)' }}>
+              台南市歸仁區 ・ 用心賣好車
+            </p>
+          </footer>
 
-        {/* 行動呼籲 (CTA) 區塊 */}
-        <div className="px-6 py-8 bg-slate-50 flex-grow border-t border-slate-100">
-          <div className="space-y-4">
-            
-            {/* LINE CTA Button */}
-            <a 
-              href="https://lin.ee/XtPcoZP" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center justify-between w-full p-4 bg-[#06C755] hover:bg-[#05b34c] transition-colors rounded-2xl shadow-sm group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 p-2 rounded-xl text-white">
-                  <MessageCircle size={24} />
-                </div>
-                <div className="text-left">
-                  <p className="text-white font-bold text-lg">加官方 LINE 洽詢</p>
-                  <p className="text-green-50 text-sm">ID：@jiamacar</p>
-                </div>
-              </div>
-              <ChevronRight className="text-white opacity-80 group-hover:translate-x-1 transition-transform" />
-            </a>
-
-            {/* 官網 CTA Button */}
-            <a 
-              href="https://jiama.com.tw/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center justify-between w-full p-4 bg-white hover:bg-slate-50 border border-slate-200 transition-colors rounded-2xl shadow-sm group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="bg-slate-100 p-2 rounded-xl text-slate-600">
-                  <Globe size={24} />
-                </div>
-                <div className="text-left">
-                  <p className="text-slate-800 font-bold text-lg">佳馬汽車官網</p>
-                  <p className="text-slate-500 text-sm">查看更多優質好車</p>
-                </div>
-              </div>
-              <ChevronRight className="text-slate-400 group-hover:translate-x-1 transition-transform" />
-            </a>
-
-          </div>
-
-          {/* 實體店面資訊 */}
-          <div className="mt-8 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <MapPin className="text-slate-400 shrink-0 mt-0.5" size={20} />
-                <div>
-                  <p className="text-sm font-semibold text-slate-700">賞車地點</p>
-                  <p className="text-sm text-slate-600 mt-0.5">台南市歸仁區中山路三段550號</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <Clock className="text-slate-400 shrink-0 mt-0.5" size={20} />
-                <div>
-                  <p className="text-sm font-semibold text-slate-700">營業時間</p>
-                  <p className="text-sm text-slate-600 mt-0.5">08:00 - 19:00</p>
-                  <p className="text-xs text-slate-400 mt-0.5">(假日照常營業)</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* 頁尾與睡覺的賓士貓 */}
-        <footer className="relative pt-6 pb-8 text-center bg-slate-50 border-t border-slate-200">
-          <div className="absolute -top-[1.2rem] right-8 z-10 w-16 h-8 opacity-80">
-            <SleepingTuxedoCat className="w-full h-full" />
-          </div>
-          <p className="text-xs text-slate-400">
-            &copy; {new Date().getFullYear()} 佳馬汽車 版權所有
-          </p>
-        </footer>
-
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 }
